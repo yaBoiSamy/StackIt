@@ -11,17 +11,11 @@ public class HightBar : MonoBehaviour
     
     private LevelStatus levelStatus;
 
-    [SerializeField]
     private RectTransform bronzeTrophy, silverTrophy, goldTrophy, bronzeBarT, silverBarT, goldBarT;
-
-    [SerializeField]
     private ImageFader bronzeCheck, silverCheck, goldCheck;
-
-    [SerializeField]
     private Image foreground;
 
-    [SerializeField]
-    private Transform bronzeTrigger, silverTrigger, goldTrigger;
+    public Transform bronzeTrigger, silverTrigger, goldTrigger;
 
     private bool bronzeEarned, silverEarned, goldEarned;
 
@@ -35,17 +29,32 @@ public class HightBar : MonoBehaviour
     {
         levelStatus = Camera.main.GetComponent<LevelStatus>();
 
+        Transform trophies = transform.Find("Trophies");
+        bronzeTrophy = (RectTransform)trophies.Find("Bronze");
+        silverTrophy = (RectTransform)trophies.Find("Silver");
+        goldTrophy   = (RectTransform)trophies.Find("Gold");
+
+        bronzeBarT = (RectTransform)transform.Find("Background Bronze");
+        silverBarT = (RectTransform)transform.Find("Background Silver");
+        goldBarT   = (RectTransform)transform.Find("Background Gold");
+
+        bronzeCheck = bronzeTrophy.Find("Checkmark").GetComponent<ImageFader>();
+        silverCheck = silverTrophy.Find("Checkmark").GetComponent<ImageFader>();
+        goldCheck   =   goldTrophy.Find("Checkmark").GetComponent<ImageFader>();
+
+        foreground = transform.Find("Foreground").GetComponent<Image>();
+
         bronzeBarT.sizeDelta = new Vector2(50, bronzeTrigger.position.y * barHeight / goldTrigger.position.y);
         silverBarT.sizeDelta = new Vector2(50, silverTrigger.position.y * barHeight / goldTrigger.position.y - bronzeBarT.sizeDelta.y);
-        goldBarT.sizeDelta = new Vector2(50, barHeight - bronzeBarT.sizeDelta.y - silverBarT.sizeDelta.y);
+        goldBarT.sizeDelta   = new Vector2(50, barHeight - bronzeBarT.sizeDelta.y - silverBarT.sizeDelta.y);
 
-        bronzeBarT.localPosition =  Vector3.up * (bronzeBarT.sizeDelta.y / 2 - 750);
+        bronzeBarT.localPosition = Vector3.up * (bronzeBarT.sizeDelta.y / 2 - 750);
         silverBarT.localPosition = Vector3.up * (bronzeBarT.sizeDelta.y + silverBarT.sizeDelta.y / 2 - 750);
-        goldBarT.localPosition =  Vector3.up * (bronzeBarT.sizeDelta.y + silverBarT.sizeDelta.y + goldBarT.sizeDelta.y / 2 - 750);
+        goldBarT.localPosition   = Vector3.up * (bronzeBarT.sizeDelta.y + silverBarT.sizeDelta.y + goldBarT.sizeDelta.y / 2 - 750);
 
         bronzeTrophy.localPosition = new Vector2(bronzeTrophy.localPosition.x, bronzeBarT.sizeDelta.y);
         silverTrophy.localPosition = new Vector2(silverTrophy.localPosition.x, bronzeBarT.sizeDelta.y + silverBarT.sizeDelta.y);
-        goldTrophy.localPosition = new Vector2(goldTrophy.localPosition.x, 1500);
+        goldTrophy.localPosition   = new Vector2(goldTrophy.localPosition.x, 1500);
     }
     
     void Update()

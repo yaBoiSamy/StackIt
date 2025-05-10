@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class Item_caroussel : MonoBehaviour
 {
+    public float scrollSensitivity;
+
     public RectTransform[] carrouselButtons;
     private RectTransform carrouselTransform;
 
@@ -22,8 +24,7 @@ public class Item_caroussel : MonoBehaviour
     private List<int> appearAnimationQueue = new List<int>();
 
     private Vector3 emptyVector = Vector3.zero;
-
-    private Vector2 previousmousePosition;
+    private Vector3 scrollStartPosition = Vector3.zero;
     public bool isScrolling;
     public bool previouslyScrolling;
 
@@ -43,76 +44,46 @@ public class Item_caroussel : MonoBehaviour
     
     void Update()
     {
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-            Ray ray = canvasCamera.ScreenPointToRay(touch.position);
-            RaycastHit hitInfo;
+        bool touchExists = Input.touchCount > 0;
+        bool clickExists = Input.GetMouseButton(0);
+        if (touchExists || clickExists)
+            castCarrouselRay(canvasCamera.ScreenPointToRay(touchExists ? Input.GetTouch(0).position : Input.mousePosition), touchExists);
+        else
+            isScrolling = false;
 
-            if (Physics.Raycast(ray, out hitInfo, 10f))
-            {
-                
-                GameObject hitObject = hitInfo.collider.gameObject;
-                if (hitObject.CompareTag("Carrousel"))
-                {
-                    if (touch.phase == TouchPhase.Began)
-                    {
-                        clickOffset = transform.position.x - ray.origin.x;
-                    }
-                    else
-                    {
-                        transform.position = new Vector3(ray.GetPoint(10f).x + clickOffset, transform.position.y, transform.position.z);
-                    }
-                }
-            }
-        }
-        else if (Input.GetMouseButton(0))
-        {
-            Ray ray = canvasCamera.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hitInfo;
+        if (isScrolling) return;
 
-
-            if (Physics.Raycast(ray, out hitInfo, 10f))
-            {
-                GameObject hitObject = hitInfo.collider.gameObject;
-                if (hitObject.CompareTag("Carrousel"))
-                {
-                    if (previousmousePosition.x != Input.mousePosition.x)
-                    {
-                        isScrolling = true;
-                    }
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        clickOffset = transform.position.x - ray.origin.x;
-                    }
-                    else if (isScrolling)
-                    {
-                        transform.position = new Vector3(ray.GetPoint(10f).x + clickOffset, transform.position.y, transform.position.z);
-                    } 
-                }
-                else { isScrolling = false;}
-            }
-            else{isScrolling = false;}
-                
-        }
-        else{isScrolling = false;}
-
-        if (!isScrolling)
-        {
-            if (transform.localPosition.x > carrouselBoundRight)
-            {
-                transform.localPosition = Vector3.SmoothDamp(transform.localPosition, new Vector3(carrouselBoundRight, transform.localPosition.y, transform.localPosition.z), ref emptyVector, boundReajustTime);
-            }
-            else if (transform.localPosition.x < carrouselBoundLeft)
-            {
-                transform.localPosition = Vector3.SmoothDamp(transform.localPosition, new Vector3(carrouselBoundLeft, transform.localPosition.y, transform.localPosition.z), ref emptyVector, boundReajustTime);
-            }
-        }
+        if (transform.localPosition.x > carrouselBoundRight)
+            transform.localPosition = Vector3.SmoothDamp(transform.localPosition, new Vector3(carrouselBoundRight, transform.localPosition.y, transform.localPosition.z), ref emptyVector, boundReajustTime);
+        else if (transform.localPosition.x < carrouselBoundLeft)
+            transform.localPosition = Vector3.SmoothDamp(transform.localPosition, new Vector3(carrouselBoundLeft, transform.localPosition.y, transform.localPosition.z), ref emptyVector, boundReajustTime);
     }
+
+    private void castCarrouselRay(Ray ray, bool touchExists)
+    {
+        RaycastHit hitInfo;
+        if (!Physics.Raycast(ray, out hitInfo, 10f)) { isScrolling = false; return; }
+
+        GameObject hitObject = hitInfo.collider.gameObject;
+        Vector3 currentPosition = ray.GetPoint(10f);
+        if (!hitObject.CompareTag("Carrousel")) return;
+
+        if (Input.GetMouseButtonDown(0) || (touchExists && Input.GetTouch(0).phase == TouchPhase.Began))
+        {
+            scrollStartPosition = currentPosition;
+            clickOffset = transform.position.x - currentPosition.x;
+        }
+        else
+        {
+            isScrolling |= (scrollStartPosition - currentPosition).magnitude > 1 / scrollSensitivity;
+        }
+
+        transform.position = new Vector3(currentPosition.x + clickOffset, transform.position.y, transform.position.z);
+    }
+
 
     private void LateUpdate()
     {
-        previousmousePosition = Input.mousePosition;
         previouslyScrolling = isScrolling;
     }
 

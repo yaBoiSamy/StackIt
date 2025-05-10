@@ -43,7 +43,6 @@ public class LevelStatus : MonoBehaviour
     void Update()
     {
         highestY = HighestY();
-        Debug.Log(highestY);
 
         Vector3 targetPosition = new Vector3(0, highestY, highestY / Mathf.Tan(80f / 2)) + cameraOffset;
         transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
