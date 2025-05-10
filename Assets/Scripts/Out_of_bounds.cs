@@ -12,7 +12,7 @@ public class Out_of_bounds : MonoBehaviour
     private void Start()
     {
         levelStatus = Camera.main.GetComponent<LevelStatus>();
-        item_Caroussel = GameObject.FindWithTag("Carrousel").GetComponent<Item_caroussel>();
+        item_Caroussel = levelStatus.itemCarrousel.GetComponent<Item_caroussel>();
     }
 
     private void OnTriggerEnter(Collider collision)
@@ -22,32 +22,31 @@ public class Out_of_bounds : MonoBehaviour
 
     private void Update()
     {
-        if (!(item_Caroussel.isScrolling || levelStatus.isPlacing))
+        if (item_Caroussel.IsScrolling() && !levelStatus.IsPlacing()) return;
+
+        if (Input.touchCount > 0 && EventSystem.current.currentSelectedGameObject == null)
         {
-            if (Input.touchCount > 0 && EventSystem.current.currentSelectedGameObject == null)
-            {
-                Touch touch = Input.GetTouch(0);
+            Touch touch = Input.GetTouch(0);
 
-                if (touch.phase == TouchPhase.Ended)
-                {
-                    Ray ray = Camera.main.ScreenPointToRay(touch.position);
-                    RaycastHit hitInfo;
-
-                    if (Physics.Raycast(ray, out hitInfo, 20f))
-                    {
-                        DeactivateObject(hitInfo.collider.gameObject);
-                    }
-                }
-            }
-            else if (Input.GetMouseButtonUp(0) && EventSystem.current.currentSelectedGameObject == null)
+            if (touch.phase == TouchPhase.Ended)
             {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                Ray ray = Camera.main.ScreenPointToRay(touch.position);
                 RaycastHit hitInfo;
 
                 if (Physics.Raycast(ray, out hitInfo, 20f))
                 {
                     DeactivateObject(hitInfo.collider.gameObject);
                 }
+            }
+        }
+        else if (Input.GetMouseButtonUp(0) && EventSystem.current.currentSelectedGameObject == null)
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hitInfo;
+
+            if (Physics.Raycast(ray, out hitInfo, 20f))
+            {
+                DeactivateObject(hitInfo.collider.gameObject);
             }
         }
     }
@@ -62,11 +61,11 @@ public class Out_of_bounds : MonoBehaviour
         Rigidbody collisionRB = collisionParent.GetComponent<Rigidbody>();
         PlaceObject placeObject = collisionParent.GetComponent<PlaceObject>();
 
-        if (!placeObject.placingObject && collisionParent.CompareTag("LevelObject"))
+        if (!placeObject.PlacingObject() && collisionParent.CompareTag("LevelObject"))
         {
             collisionParent.position = inactivePos.position;
             collisionParent.rotation = Quaternion.identity;
-            item_Caroussel.AppearThenSlide(placeObject.objectIndex);
+            item_Caroussel.AppearThenSlide(collisionParent);
             collisionParent.gameObject.SetActive(false);
             collisionRB.velocity = Vector3.zero;
             collisionRB.angularVelocity = Vector3.zero;

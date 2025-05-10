@@ -3,7 +3,9 @@ guid: 3c045f7a28e0ebf479173b8552c9c9b5
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - carrousselButtonPrefab: {fileID: 3421811033158944764, guid: af25692cbe60e7a4c8f760d08458cbed, type: 3}
+  - canvasCamera: {instanceID: 0}
   executionOrder: 29
   icon: {instanceID: 0}
   userData: 

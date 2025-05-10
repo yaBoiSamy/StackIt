@@ -33,7 +33,7 @@ public class MovementDetector : MonoBehaviour
 
         for (int i = 0; i < levelItems.Length; i++)
         {
-            if(placeObjects[i].placingObject)
+            if(placeObjects[i].PlacingObject())
             {
                 isMoving = true;
                 isPlacing = true;

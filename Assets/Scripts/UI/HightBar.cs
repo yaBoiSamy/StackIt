@@ -59,10 +59,10 @@ public class HightBar : MonoBehaviour
     
     void Update()
     {
-        if (levelStatus.previouslyMoving == true && levelStatus.isMoving == false && levelStatus.highestY > previousUpdateHighestY)
+        if (levelStatus.PreviouslyMoving() && !levelStatus.IsMoving() && levelStatus.HighestY() > previousUpdateHighestY)
         {
-            initiateLerp(1 - levelStatus.highestY / goldTrigger.position.y);
-            previousUpdateHighestY = levelStatus.highestY;
+            initiateLerp(1 - levelStatus.HighestY() / goldTrigger.position.y);
+            previousUpdateHighestY = levelStatus.HighestY();
         }
         if (!bronzeEarned && (barHeight - foreground.fillAmount * barHeight) > bronzeBarT.sizeDelta.y)
         {

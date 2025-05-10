@@ -1,18 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 public class Item_caroussel : MonoBehaviour
 {
+    private LevelStatus levelStatus;
+    private Transform[] carrouselButtons;
+    public GameObject carrousselButtonPrefab;
+
     public float scrollSensitivity;
 
-    public RectTransform[] carrouselButtons;
     private RectTransform carrouselTransform;
 
     public  float animationTime;
 
-    public Camera canvasCamera;
+    private Camera canvasCamera;
     private float clickOffset;
 
     private int carrouselButtonCount;
@@ -25,18 +29,40 @@ public class Item_caroussel : MonoBehaviour
 
     private Vector3 emptyVector = Vector3.zero;
     private Vector3 scrollStartPosition = Vector3.zero;
-    public bool isScrolling;
-    public bool previouslyScrolling;
-
-    public bool isAnimating;
+    private bool isScrolling;
+    private bool previouslyScrolling;
+    private bool isAnimating;
 
     void Start()
     {
-        carrouselTransform = gameObject.GetComponent<RectTransform>();
-        carrouselButtonCount = carrouselButtons.Length;
-        if(carrouselButtonCount > 5f)
+        Camera[] cameras = new Camera[Camera.allCamerasCount];
+        Camera.GetAllCameras(cameras); 
+        foreach (Camera cam in cameras)
         {
-            float initialBoundOffset = (carrouselButtonCount - 5f) * 180f;
+            if (cam.GetComponent<UniversalAdditionalCameraData>().renderType == CameraRenderType.Overlay)
+            {
+                canvasCamera = cam;
+                break;
+            }
+        }
+
+        levelStatus = Camera.main.GetComponent<LevelStatus>();
+        carrouselTransform = transform.GetComponent<RectTransform>();
+        carrouselButtonCount = levelStatus.ItemCount();
+        carrouselButtons = new Transform[levelStatus.ItemCount()];
+
+        for (int i = 0; i < levelStatus.ItemCount(); i++)
+        {
+            carrouselButtons[i] = Instantiate(carrousselButtonPrefab).GetComponent<Transform>();
+            carrouselButtons[i].SetParent(transform);
+            carrouselButtons[i].GetComponent<CarrouselButton>().Initialize(levelStatus.GetItem(i));
+            carrouselButtons[i].localPosition = new Vector3(-446 + 2*halfSquare*i, 0, 0);
+            carrouselButtons[i].localScale = Vector3.one;
+        }
+
+        if(levelStatus.ItemCount() > 5f)
+        {
+            float initialBoundOffset = (levelStatus.ItemCount() - 5f) * 180f;
             carrouselBoundLeft = -initialBoundOffset;
             carrouselBoundRight = initialBoundOffset;
         }
@@ -87,35 +113,54 @@ public class Item_caroussel : MonoBehaviour
         previouslyScrolling = isScrolling;
     }
 
-    public void DisappearThenSlide(int clickedButtonIndex)
+    public void DisappearThenSlide(Transform levelItem)
     {
-        StartCoroutine(disappearAnimation(clickedButtonIndex));
-        StartCoroutine(slideIntoPlace(clickedButtonIndex, true));
-    }
-
-    public void AppearThenSlide(int clickedButtonIndex)
-    {
-        if (appearAnimationQueue.Count == 0)
+        for (int i = 0; i < levelStatus.ItemCount(); i++)
         {
-            StartCoroutine(appearAnimation(clickedButtonIndex));
-            StartCoroutine(slideIntoPlace(clickedButtonIndex, false));
-        }
+            Transform carrouselButton = carrouselButtons[i];
+            if (carrouselButton.GetComponent<CarrouselButton>().LevelItem() == levelItem)
+            {
+                StartCoroutine(disappearAnimation(carrouselButton));
+                StartCoroutine(slideIntoPlace(i, true));
+                return;
+            }
 
-        appearAnimationQueue.Add(clickedButtonIndex);
+        }
     }
 
-    IEnumerator disappearAnimation(int clickedButtonIndex)
+    public void AppearThenSlide(Transform levelItem)
+    {
+        for (int i = 0; i < levelStatus.ItemCount(); i++)
+        {
+            Transform carrouselButton = carrouselButtons[i];
+            if (carrouselButton.GetComponent<CarrouselButton>().LevelItem() == levelItem)
+            {
+
+                if (appearAnimationQueue.Count == 0)
+                {
+                    StartCoroutine(appearAnimation(carrouselButton));
+                    StartCoroutine(slideIntoPlace(i, false));
+                }
+
+                appearAnimationQueue.Add(i);
+                return;
+            }
+
+        }
+    }
+
+    IEnumerator disappearAnimation(Transform carrouselButton)
     {
         isAnimating = true;
-        while (carrouselButtons[clickedButtonIndex].localScale.x > 0.01f)
+        while (carrouselButton.localScale.x > 0.01f)
         {
-            float lerpUpdate = Mathf.Lerp(carrouselButtons[clickedButtonIndex].localScale.x, 0, animationTime);
-            carrouselButtons[clickedButtonIndex].localScale = new Vector3(lerpUpdate, lerpUpdate, 1f);
+            float lerpUpdate = Mathf.Lerp(carrouselButton.localScale.x, 0, animationTime);
+            carrouselButton.localScale = new Vector3(lerpUpdate, lerpUpdate, 1f);
             yield return null;
         }
 
-        carrouselButtons[clickedButtonIndex].gameObject.SetActive(false);
-        carrouselButtons[clickedButtonIndex].localScale = new Vector3(0f,0f,1f);
+        carrouselButton.gameObject.SetActive(false);
+        carrouselButton.localScale = new Vector3(0f,0f,1f);
 
         if(carrouselButtonCount > 5)
         {
@@ -126,19 +171,19 @@ public class Item_caroussel : MonoBehaviour
         isAnimating = false;
     }
 
-    IEnumerator appearAnimation(int clickedButtonIndex)
+    IEnumerator appearAnimation(Transform carrouselButton)
     {
         isAnimating = true;
-        carrouselButtons[clickedButtonIndex].gameObject.SetActive(true);
+        carrouselButton.gameObject.SetActive(true);
 
-        while (carrouselButtons[clickedButtonIndex].localScale.x <= 0.99f)
+        while (carrouselButton.localScale.x <= 0.99f)
         {
-            float lerpUpdate = Mathf.Lerp(carrouselButtons[clickedButtonIndex].localScale.x, 1, animationTime);
-            carrouselButtons[clickedButtonIndex].localScale = new Vector3(lerpUpdate, lerpUpdate, animationTime);
+            float lerpUpdate = Mathf.Lerp(carrouselButton.localScale.x, 1, animationTime);
+            carrouselButton.localScale = new Vector3(lerpUpdate, lerpUpdate, animationTime);
             yield return null;
         }
 
-        carrouselButtons[clickedButtonIndex].localScale = Vector3.one;
+        carrouselButton.localScale = Vector3.one;
         carrouselButtonCount += 1;
 
         if (carrouselButtonCount > 5)
@@ -158,15 +203,16 @@ public class Item_caroussel : MonoBehaviour
             {
                 if (i < clickedButtonIndex)
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x + halfSquare);
+
+                    targetPosition.Add(carrouselButtons[i].localPosition.x + halfSquare);
                 }
                 else if ( i > clickedButtonIndex)
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x - halfSquare);
+                    targetPosition.Add(carrouselButtons[i].localPosition.x - halfSquare);
                 }
                 else
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x);
+                    targetPosition.Add(carrouselButtons[i].localPosition.x);
                 }
             }
         }
@@ -176,15 +222,15 @@ public class Item_caroussel : MonoBehaviour
             {
                 if (i < clickedButtonIndex)
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x - halfSquare);
+                    targetPosition.Add(carrouselButtons[i].localPosition.x - halfSquare);
                 }
                 else if (i > clickedButtonIndex)
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x + halfSquare);
+                    targetPosition.Add(carrouselButtons[i].localPosition.x + halfSquare);
                 }
                 else if (i == clickedButtonIndex)
                 {
-                    targetPosition.Add(carrouselButtons[i].transform.localPosition.x);
+                    targetPosition.Add(carrouselButtons[i].localPosition.x);
                 }
             }
         }
@@ -197,13 +243,12 @@ public class Item_caroussel : MonoBehaviour
             
             for (int i = 0; i < carrouselButtons.Length; i++)
             {
-                carrouselButtons[i].transform.localPosition = new Vector3(Mathf.Lerp(carrouselButtons[i].transform.localPosition.x, targetPosition[i], animationTime), carrouselButtons[i].transform.localPosition.y, carrouselButtons[i].transform.localPosition.z);
+                carrouselButtons[i].localPosition = new Vector3(Mathf.Lerp(carrouselButtons[i].localPosition.x, targetPosition[i], animationTime), carrouselButtons[i].localPosition.y, carrouselButtons[i].localPosition.z);
                 
-                if (!(carrouselButtons[i].transform.localPosition.x <= targetPosition[i] + 1f && carrouselButtons[i].transform.localPosition.x >= targetPosition[i] - 1f))
+                if (!(carrouselButtons[i].localPosition.x <= targetPosition[i] + 1f && carrouselButtons[i].localPosition.x >= targetPosition[i] - 1f))
                 {
                     slidingComplete = false;
                 }
-                
             }
             
             yield return null;
@@ -211,7 +256,7 @@ public class Item_caroussel : MonoBehaviour
 
         for (int i=0; i < carrouselButtons.Length; i++)
         {
-            carrouselButtons[i].transform.localPosition = new Vector3(targetPosition[i], carrouselButtons[i].transform.localPosition.y, carrouselButtons[i].transform.localPosition.z);
+            carrouselButtons[i].localPosition = new Vector3(targetPosition[i], carrouselButtons[i].localPosition.y, carrouselButtons[i].localPosition.z);
         }
 
         if (appearAnimationQueue.Count <= 1)
@@ -220,7 +265,7 @@ public class Item_caroussel : MonoBehaviour
         }
         else
         {
-            StartCoroutine(appearAnimation(appearAnimationQueue[1]));
+            StartCoroutine(appearAnimation(carrouselButtons[appearAnimationQueue[1]]));
             StartCoroutine(slideIntoPlace(appearAnimationQueue[1], false));
         }
 
@@ -228,5 +273,20 @@ public class Item_caroussel : MonoBehaviour
         {
             appearAnimationQueue.RemoveAt(0);
         }
+    }
+
+    public bool IsScrolling()
+    {
+        return isScrolling;
+    }
+
+    public bool IsAnimating()
+    {
+        return isAnimating;
+    }
+
+    public bool PreviouslyScrolling()
+    {
+        return previouslyScrolling;
     }
 }

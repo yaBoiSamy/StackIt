@@ -1,48 +1,54 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LevelStatus : MonoBehaviour
 {
-    public float highestY;
+    public Transform itemsParent;
+    public Transform itemCarrousel;
 
-    private const float blockPlacementOffset = 1.5f;
+    private int itemCount;
+    private Transform[] items;
+    private Renderer[] meshes;
+    private Rigidbody[] physics;
+    private PlaceObject[] placeObjects;
 
-    private GameObject[] levelMeshes;
+    private float highestY;
 
     //camera vars
     private Vector3 cameraOffset;
     private float smoothTime = 0.25f;
     private Vector3 velocity = Vector3.zero;
 
-    private Rigidbody[] rb;
-    public bool isMoving;
-    public bool previouslyMoving;
-    private PlaceObject[] placeObjects;
-    public bool isPlacing;
+    private bool isMoving;
+    private bool previouslyMoving;
+    private bool isPlacing;
     
     public float sensitivity;
 
     void Awake()
     {
-        levelMeshes = GameObject.FindGameObjectsWithTag("LevelItemMesh");
+        itemCount = itemsParent.childCount;
+        items = new Transform[itemCount];
+        meshes = new Renderer[itemCount];
+        physics = new Rigidbody[itemCount];
+        placeObjects = new PlaceObject[itemCount];
+        for(int i = 0; i < itemCount; i++)
+        {
+            items[i] = itemsParent.GetChild(i);
+            meshes[i] = findMesh(items[i]);
+            physics[i] = items[i].GetComponent<Rigidbody>();
+            placeObjects[i] = items[i].GetComponent<PlaceObject>();
+        }
 
         cameraOffset = transform.position;
-
-        rb = new Rigidbody[levelMeshes.Length];
-        placeObjects = new PlaceObject[levelMeshes.Length];
-
-        for (int i = 0; i < levelMeshes.Length; i++)
-        {
-            Transform parent = FindParent(levelMeshes[i]);
-            rb[i] = parent.GetComponent<Rigidbody>();
-            placeObjects[i] = parent.GetComponent<PlaceObject>();
-        }
     }
 
     void Update()
     {
-        highestY = HighestY();
+        highestY = ComputeHighestY();
 
         Vector3 targetPosition = new Vector3(0, highestY, highestY / Mathf.Tan(80f / 2)) + cameraOffset;
         transform.position = Vector3.SmoothDamp(transform.position, targetPosition, ref velocity, smoothTime);
@@ -50,35 +56,31 @@ public class LevelStatus : MonoBehaviour
         isMoving = false;
         isPlacing = false;
 
-        for (int i = 0; i < levelMeshes.Length; i++)
+        foreach(PlaceObject placeObject in placeObjects)
         {
-            if (placeObjects[i].placingObject)
-            {
-                isMoving = true;
-                isPlacing = true;
-            }
-            if (rb[i].velocity.magnitude > sensitivity)
-            {
-                isMoving = true;
-            }
+            isMoving |= placeObject.PlacingObject();
+            isPlacing |= placeObject.PlacingObject();
+        }
+
+        foreach(Rigidbody rb in physics)
+        {
+            isMoving |= rb.velocity.magnitude > sensitivity;
         }
     }
 
 
-    private float HighestY()
+    private float ComputeHighestY()
     {
-        float highestYvalue = 0;
+        float max = 0;
 
-        for (int i = 0; i < levelMeshes.Length; i++)
+        foreach (Renderer mesh in meshes)
         {
-            Bounds itemBounds = levelMeshes[i].GetComponent<Renderer>().bounds;
+            float highestVertex = mesh.bounds.max.y;
 
-            if (itemBounds.max.y > highestYvalue)
-            {
-                highestYvalue = itemBounds.max.y;
-            }
+            if (highestVertex > max)
+                max = highestVertex;
         }
-        return highestYvalue;
+        return max;
     }
 
     private void LateUpdate()
@@ -86,18 +88,47 @@ public class LevelStatus : MonoBehaviour
         previouslyMoving = isMoving;
     }
 
-    private Transform FindParent(GameObject childObject)
+    private Renderer findMesh(Transform root)
     {
-        Transform currentTransform = childObject.transform;
-        while (currentTransform != null)
+        Renderer res = root.GetComponent<Renderer>();
+        if (res != null) return res;
+
+
+        foreach (Transform child in root)
         {
-            PlaceObject placeObject = currentTransform.GetComponent<PlaceObject>();
-            if (placeObject != null)
-            {
-                return currentTransform;
-            }
-            currentTransform = currentTransform.parent;
+            res = findMesh(child);
+            if (res != null) return res;
         }
         return null;
+    }
+
+    public int ItemCount()
+    {
+        return itemCount;
+    }
+
+    public Transform GetItem(int itemIndex)
+    {
+        return items[itemIndex];
+    }
+
+    public bool IsPlacing()
+    {
+        return isPlacing;
+    }
+
+    public bool IsMoving()
+    {
+        return isMoving;
+    }
+
+    public bool PreviouslyMoving()
+    {
+        return previouslyMoving;
+    }
+
+    public float HighestY()
+    {
+        return highestY;
     }
 }

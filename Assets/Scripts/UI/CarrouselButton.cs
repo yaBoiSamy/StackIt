@@ -5,14 +5,20 @@ using UnityEngine.UI;
 
 public class CarrouselButton : MonoBehaviour
 {
-    public Transform levelObject;
-    public Sprite objectImage;
-
-    void Start()
+    private Transform levelItem = null;
+    public void Initialize(Transform levelItem)
     {
+        this.levelItem = levelItem;
         Transform button = transform.Find("Button");
-        PlaceObject script = levelObject.GetComponent<PlaceObject>();
-        button.GetComponent<Button>().onClick.AddListener(script.spawnObject); 
-        button.GetComponent<Image>().sprite = objectImage;
+        PlaceObject script = levelItem.GetComponent<PlaceObject>();
+        button.GetComponent<Button>().onClick.AddListener(() => {
+            script.spawnObject();
+        });
+        button.GetComponent<Image>().sprite = script.buttonImage;
+    }
+
+    public Transform LevelItem()
+    {
+        return levelItem;
     }
 }
