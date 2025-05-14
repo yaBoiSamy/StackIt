@@ -53,6 +53,7 @@ public class Out_of_bounds : MonoBehaviour
 
     private void DeactivateObject(GameObject item)
     {
+        if (levelStatus.IsPlacing()) return;
         Transform collisionParent = FindParentRigidbody(item);
         if(collisionParent == null)
         {

@@ -32,16 +32,17 @@ public class LevelStatus : MonoBehaviour
     {
         itemCount = itemsParent.childCount;
         items = new Transform[itemCount];
-        meshes = new Renderer[itemCount];
+        List<Renderer> meshList = new List<Renderer>();
         physics = new Rigidbody[itemCount];
         placeObjects = new PlaceObject[itemCount];
         for(int i = 0; i < itemCount; i++)
         {
             items[i] = itemsParent.GetChild(i);
-            meshes[i] = findMesh(items[i]);
+            meshList.AddRange(findMesh(items[i]));
             physics[i] = items[i].GetComponent<Rigidbody>();
             placeObjects[i] = items[i].GetComponent<PlaceObject>();
         }
+        meshes = meshList.ToArray();
 
         cameraOffset = transform.position;
     }
@@ -78,7 +79,9 @@ public class LevelStatus : MonoBehaviour
             float highestVertex = mesh.bounds.max.y;
 
             if (highestVertex > max)
+            {
                 max = highestVertex;
+            }
         }
         return max;
     }
@@ -88,18 +91,18 @@ public class LevelStatus : MonoBehaviour
         previouslyMoving = isMoving;
     }
 
-    private Renderer findMesh(Transform root)
+    private List<Renderer> findMesh(Transform parent)
     {
-        Renderer res = root.GetComponent<Renderer>();
-        if (res != null) return res;
-
-
-        foreach (Transform child in root)
+        List<Renderer> meshes = new List<Renderer>();
+        foreach (Transform child in parent)
         {
-            res = findMesh(child);
-            if (res != null) return res;
+            meshes.AddRange(findMesh(child));
+
+            if (!child.gameObject.CompareTag("LevelItemMesh")) continue;
+            Renderer r = child.GetComponent<Renderer>();
+            if (r != null) meshes.Add(r);
         }
-        return null;
+        return meshes;
     }
 
     public int ItemCount()

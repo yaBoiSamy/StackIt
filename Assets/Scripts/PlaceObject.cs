@@ -31,7 +31,7 @@ public class PlaceObject : MonoBehaviour
         levelStatus = Camera.main.GetComponent<LevelStatus>();
         item_Caroussel = levelStatus.itemCarrousel.GetComponent<Item_caroussel>();
         gameObject.SetActive(false);
-        transform.position = new Vector3(-8, 0, 0);
+        transform.position = new Vector3(-8, -8, 0);
         rb = gameObject.GetComponent<Rigidbody>();
     }
 
