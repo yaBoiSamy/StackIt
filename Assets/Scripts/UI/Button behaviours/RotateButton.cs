@@ -7,9 +7,10 @@ public class RotateButton : MonoBehaviour
 {
     void Start()
     {
+        Button b = GetComponent<Button>();
         foreach (Transform item in Camera.main.GetComponent<LevelStatus>().itemsParent)
         {
-            GetComponent<Button>().onClick.AddListener(() => {
+            b.onClick.AddListener(() => {
                 item.GetComponent<PlaceObject>().initiateRotation();
             });
         }
