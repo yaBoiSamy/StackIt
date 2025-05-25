@@ -1,18 +1,11 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SceneSwitcher : MonoBehaviour
 {
-    public bool withLoadingScreen;
-
-    public void SwitchScene(int sceneIndex)
+    public void LoadScene(int index)
     {
-        if (GameManager.instance != null)
-        {
-            GameManager.instance.LoadScene(sceneIndex, withLoadingScreen);
-        }
-        else
-        {
-            Debug.LogError("GameManager instance is not set.");
-        }
+        GameManager.instance.LoadScene(index);
     }
 }

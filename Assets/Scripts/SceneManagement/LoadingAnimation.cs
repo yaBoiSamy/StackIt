@@ -34,15 +34,12 @@ public class LoadingAnimation : MonoBehaviour
     void Update()
     {
         if(timer <= 0)
-        {
-            ResetAnimations();
-            timer = animationTime;
-        }
+            ResetAnimation();
 
         timer -= Time.deltaTime;
     }
 
-    public void ResetAnimations()
+    public void ResetAnimation()
     {
         for (int i = 0; i < items.Length; i++)
         {
@@ -51,5 +48,6 @@ public class LoadingAnimation : MonoBehaviour
             itemRBs[i].velocity = Vector2.zero;
             itemRBs[i].angularVelocity = 0f;
         }
+        timer = animationTime;
     }
 }

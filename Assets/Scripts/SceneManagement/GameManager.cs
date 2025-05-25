@@ -7,9 +7,10 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
-    public Material[] skyboxes;
+    public bool[] requiresLoadingScreen;
 
     public GameObject loadingScreen;
+    public LoadingAnimation loadingAnimation;
     public Image loadingBar;
 
     public Image fadeImage;
@@ -30,12 +31,15 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        loadingAnimation = loadingScreen.GetComponent<LoadingAnimation>();
         SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(0));
     }
 
 
-    public void LoadScene(int sceneIndex, bool withLoad)
+    public void LoadScene(int sceneIndex)
     {
+        loadingAnimation.ResetAnimation();
+        bool withLoad = requiresLoadingScreen[currentScene] || requiresLoadingScreen[sceneIndex];
         StartCoroutine(LoadSceneAsynchro(sceneIndex, withLoad));
     }
 
@@ -73,7 +77,9 @@ public class GameManager : MonoBehaviour
         }
 
         yield return null;
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneIndex));
+        Debug.Log(currentScene);
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(currentScene));
+        DynamicGI.UpdateEnvironment();
 
         while (elapsedLoadTime <= minLoadTime)
         {
