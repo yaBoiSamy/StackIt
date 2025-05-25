@@ -3,26 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ImageFader : MonoBehaviour
+public class Trophy : MonoBehaviour
 {
-    private Image image;
+    private bool earned;
+    private Image checkmark;
     public float fadeDuration = 1f;
 
     private void Start()
     {
-        image = gameObject.GetComponent<Image>();
+        checkmark = transform.Find("Checkmark").GetComponent<Image>();
     }
 
-    public void FadeImage()
+    public void Earn()
     {
+        earned = true;
         StartCoroutine(FadeInImage());
     }
 
-    public void ResetImage()
+    public void ResetTrophy()
     {
-        Color finalColor = image.color;
+        earned = false;
+        Color finalColor = checkmark.color;
         finalColor.a = 0f;
-        image.color = finalColor;
+        checkmark.color = finalColor;
     }
 
     IEnumerator FadeInImage()
@@ -33,16 +36,18 @@ public class ImageFader : MonoBehaviour
         {
             currentTime += Time.deltaTime;
             float t = Mathf.Clamp01(currentTime / fadeDuration);
-            
-            Color updatedColor = image.color;
+
+            Color updatedColor = checkmark.color;
             updatedColor.a = Mathf.Lerp(0f, 1f, t);
-            image.color = updatedColor;
+            checkmark.color = updatedColor;
 
             yield return null;
         }
-        
-        Color finalColor = image.color;
+
+        Color finalColor = checkmark.color;
         finalColor.a = 1f;
-        image.color = finalColor;
+        checkmark.color = finalColor;
     }
+
+    public bool Earned() { return earned; }
 }

@@ -1,11 +1,12 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Out_of_bounds : MonoBehaviour
 {
-    public Transform inactivePos;
     private Item_caroussel item_Caroussel;
     private LevelStatus levelStatus;
 
@@ -17,7 +18,8 @@ public class Out_of_bounds : MonoBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
-        DeactivateObject(collision.gameObject);
+        if (levelStatus.IsPlacing()) return;
+        FindPlaceObject(collision).DeactivateObject();
     }
 
     private void Update()
@@ -27,62 +29,34 @@ public class Out_of_bounds : MonoBehaviour
         if (Input.touchCount > 0 && EventSystem.current.currentSelectedGameObject == null)
         {
             Touch touch = Input.GetTouch(0);
-
             if (touch.phase == TouchPhase.Ended)
-            {
-                Ray ray = Camera.main.ScreenPointToRay(touch.position);
-                RaycastHit hitInfo;
-
-                if (Physics.Raycast(ray, out hitInfo, 20f))
-                {
-                    DeactivateObject(hitInfo.collider.gameObject);
-                }
-            }
+                verifyObjectClicked(touch.position);
         }
-        else if (Input.GetMouseButtonUp(0) && EventSystem.current.currentSelectedGameObject == null)
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hitInfo;
 
-            if (Physics.Raycast(ray, out hitInfo, 20f))
-            {
-                DeactivateObject(hitInfo.collider.gameObject);
-            }
+        if (Input.GetMouseButtonUp(0) && EventSystem.current.currentSelectedGameObject == null)
+            verifyObjectClicked(Input.mousePosition);
+    }
+
+    private void verifyObjectClicked(Vector3 clickPos)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(clickPos);
+        RaycastHit hitInfo;
+
+        if (Physics.Raycast(ray, out hitInfo, 20f))
+        {
+            if (levelStatus.IsPlacing()) return;
+            FindPlaceObject(hitInfo.collider).DeactivateObject();
         }
     }
 
-    private void DeactivateObject(GameObject item)
+    private PlaceObject FindPlaceObject(Collider coll)
     {
-        if (levelStatus.IsPlacing()) return;
-        Transform collisionParent = FindParentRigidbody(item);
-        if(collisionParent == null)
-        {
-            return;
-        }
-        Rigidbody collisionRB = collisionParent.GetComponent<Rigidbody>();
-        PlaceObject placeObject = collisionParent.GetComponent<PlaceObject>();
-
-        if (!placeObject.PlacingObject() && collisionParent.CompareTag("LevelObject"))
-        {
-            collisionParent.position = inactivePos.position;
-            collisionParent.rotation = Quaternion.identity;
-            item_Caroussel.AppearThenSlide(collisionParent);
-            collisionParent.gameObject.SetActive(false);
-            collisionRB.velocity = Vector3.zero;
-            collisionRB.angularVelocity = Vector3.zero;
-        }
-    }
-
-    private Transform FindParentRigidbody(GameObject childObject)
-    {
-        Transform currentTransform = childObject.transform;
+        Transform currentTransform = coll.transform;
         while (currentTransform != null)
         {
-            Rigidbody rigidbody = currentTransform.GetComponent<Rigidbody>();
-            if (rigidbody != null)
-            {
-                return currentTransform;
-            }
+            PlaceObject script = currentTransform.GetComponent<PlaceObject>();
+            if (script != null)
+                return script;
             currentTransform = currentTransform.parent;
         }
         return null;

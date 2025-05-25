@@ -32,7 +32,7 @@ public class PlaceObject : MonoBehaviour
         item_Caroussel = levelStatus.itemCarrousel.GetComponent<Item_caroussel>();
         gameObject.SetActive(false);
         transform.position = new Vector3(-8, -8, 0);
-        rb = gameObject.GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>();
     }
 
     private void Update()
@@ -88,6 +88,17 @@ public class PlaceObject : MonoBehaviour
         transform.position = new Vector3(0, levelStatus.HighestY() + placementHeight, 0);
         placingObject = true;
         rb.useGravity = false;
+    }
+
+    public void DeactivateObject()
+    {
+        if (!isActiveAndEnabled) return;
+        transform.position = levelStatus.inactivePos.position;
+        transform.rotation = Quaternion.identity;
+        item_Caroussel.AppearThenSlide(transform);
+        gameObject.SetActive(false);
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
     }
 
     public void initiateRotation()

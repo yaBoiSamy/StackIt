@@ -8,6 +8,8 @@ public class LevelStatus : MonoBehaviour
 {
     public Transform itemsParent;
     public Transform itemCarrousel;
+    public Transform heightBar;
+    public Transform inactivePos;
 
     private int itemCount;
     private Transform[] items;
