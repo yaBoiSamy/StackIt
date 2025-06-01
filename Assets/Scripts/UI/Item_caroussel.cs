@@ -29,9 +29,9 @@ public class Item_caroussel : MonoBehaviour
     private Vector2 carrouselVelocity = Vector2.zero;
     private Vector2 scrollStartPosition = Vector2.zero;
 
-    private bool isScrolling;
-    private bool previouslyScrolling;
-    private bool isAnimating;
+    [HideInInspector] public bool isScrolling;
+    [HideInInspector] public bool previouslyScrolling;
+    [HideInInspector] public bool isAnimating;
 
     struct Animation
     {
@@ -66,16 +66,16 @@ public class Item_caroussel : MonoBehaviour
         }
 
         levelStatus = Camera.main.GetComponent<LevelStatus>();
-        carrouselButtons = new RectTransform[levelStatus.ItemCount()];
+        carrouselButtons = new RectTransform[levelStatus.itemCount];
 
         parentCanvasWidth = GetComponentInParent<Canvas>().GetComponent<RectTransform>().rect.width;
-        carrouselWidth = buttonSize * levelStatus.ItemCount() * transform.localScale.x;
+        carrouselWidth = buttonSize * levelStatus.itemCount * transform.localScale.x;
 
-        for (int i = 0; i < levelStatus.ItemCount(); i++)
+        for (int i = 0; i < levelStatus.itemCount; i++)
         {
             carrouselButtons[i] = Instantiate(carrousselButtonPrefab).GetComponent<RectTransform>();
             carrouselButtons[i].SetParent(transform);
-            carrouselButtons[i].GetComponent<CarrouselButton>().Initialize(levelStatus.GetItem(i));
+            carrouselButtons[i].GetComponent<CarrouselButton>().Initialize(levelStatus.items[i]);
             carrouselButtons[i].anchoredPosition = new Vector2(buttonSize * i, 0);
             carrouselButtons[i].localScale = buttonScale * Vector2.one;
         }
@@ -153,7 +153,7 @@ public class Item_caroussel : MonoBehaviour
 
     public void DisappearThenSlide(Transform levelItem)
     {
-        for (int i = 0; i < levelStatus.ItemCount(); i++)
+        for (int i = 0; i < levelStatus.itemCount; i++)
         {
             if (carrouselButtons[i].GetComponent<CarrouselButton>().LevelItem() == levelItem)
             {
@@ -165,7 +165,7 @@ public class Item_caroussel : MonoBehaviour
 
     public void AppearThenSlide(Transform levelItem)
     {
-        for (int i = 0; i < levelStatus.ItemCount(); i++)
+        for (int i = 0; i < levelStatus.itemCount; i++)
         {
             if (carrouselButtons[i].GetComponent<CarrouselButton>().LevelItem() == levelItem)
             {
@@ -220,20 +220,5 @@ public class Item_caroussel : MonoBehaviour
             animatedButton.gameObject.SetActive(false);
         carrouselWidth += animationSign * buttonSize;
         isAnimating = false;
-    }
-
-    public bool IsScrolling()
-    {
-        return isScrolling;
-    }
-
-    public bool IsAnimating()
-    {
-        return isAnimating;
-    }
-
-    public bool PreviouslyScrolling()
-    {
-        return previouslyScrolling;
     }
 }

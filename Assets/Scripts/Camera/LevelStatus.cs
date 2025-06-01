@@ -11,22 +11,23 @@ public class LevelStatus : MonoBehaviour
     public Transform heightBar;
     public Transform inactivePos;
 
-    private int itemCount;
-    private Transform[] items;
+    [HideInInspector] public int itemCount;
+    [HideInInspector] public Transform[] items;
     private Renderer[] meshes;
     private Rigidbody[] physics;
     private PlaceObject[] placeObjects;
 
-    private float highestY;
+    [HideInInspector] public float highestY;
 
     //camera vars
     private Vector3 cameraOffset;
     private float smoothTime = 0.25f;
     private Vector3 velocity = Vector3.zero;
 
-    private bool isMoving;
-    private bool previouslyMoving;
-    private bool isPlacing;
+    [HideInInspector] public bool isMoving;
+    [HideInInspector] public bool previouslyMoving;
+    [HideInInspector] public bool isPlacing;
+    [HideInInspector] public bool isRotating;
     
     public float sensitivity;
 
@@ -105,35 +106,5 @@ public class LevelStatus : MonoBehaviour
             if (r != null) meshes.Add(r);
         }
         return meshes;
-    }
-
-    public int ItemCount()
-    {
-        return itemCount;
-    }
-
-    public Transform GetItem(int itemIndex)
-    {
-        return items[itemIndex];
-    }
-
-    public bool IsPlacing()
-    {
-        return isPlacing;
-    }
-
-    public bool IsMoving()
-    {
-        return isMoving;
-    }
-
-    public bool PreviouslyMoving()
-    {
-        return previouslyMoving;
-    }
-
-    public float HighestY()
-    {
-        return highestY;
     }
 }

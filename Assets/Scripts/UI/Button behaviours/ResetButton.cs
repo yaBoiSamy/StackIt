@@ -9,11 +9,9 @@ public class ResetButton : MonoBehaviour
     {
         LevelStatus levelStatus = Camera.main.GetComponent<LevelStatus>();
         HightBar heightBar = levelStatus.heightBar.GetComponent<HightBar>();
-        PlaceObject[] placeObjects = new PlaceObject[levelStatus.ItemCount()];
-        for (int i = 0; i < levelStatus.ItemCount(); i++)
-        {
-            placeObjects[i] = levelStatus.GetItem(i).GetComponent<PlaceObject>();
-        }
+        PlaceObject[] placeObjects = new PlaceObject[levelStatus.itemCount];
+        for (int i = 0; i < levelStatus.itemCount; i++)
+            placeObjects[i] = levelStatus.items[i].GetComponent<PlaceObject>();
 
         Button b = transform.Find("Button").GetComponent<Button>();
         b.onClick.AddListener(() =>

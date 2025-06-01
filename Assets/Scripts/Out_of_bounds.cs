@@ -18,13 +18,13 @@ public class Out_of_bounds : MonoBehaviour
 
     private void OnTriggerEnter(Collider collision)
     {
-        if (levelStatus.IsPlacing()) return;
+        if (levelStatus.isPlacing) return;
         FindPlaceObject(collision).DeactivateObject();
     }
 
     private void Update()
     {
-        if (item_Caroussel.IsScrolling() && !levelStatus.IsPlacing()) return;
+        if (item_Caroussel.isScrolling && !levelStatus.isPlacing) return;
 
         if (Input.touchCount > 0 && EventSystem.current.currentSelectedGameObject == null)
         {
@@ -44,7 +44,9 @@ public class Out_of_bounds : MonoBehaviour
 
         if (Physics.Raycast(ray, out hitInfo, 20f))
         {
-            if (levelStatus.IsPlacing()) return;
+            if (levelStatus.isPlacing) return;
+            PlaceObject placeObject = FindPlaceObject(hitInfo.collider);
+            if (placeObject == null) return;
             FindPlaceObject(hitInfo.collider).DeactivateObject();
         }
     }

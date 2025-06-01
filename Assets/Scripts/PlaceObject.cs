@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,7 +7,6 @@ using UnityEngine.EventSystems;
 public class PlaceObject : MonoBehaviour
 {
     private bool placingObject = false;
-    public int objectIndex;
     public float placementHeight;
     public Sprite buttonImage;
 
@@ -16,7 +16,8 @@ public class PlaceObject : MonoBehaviour
     //rotate vars
     private Coroutine slerpCoroutine;
     private Quaternion storedTargetRotation;
-    private float slerpSpeed = 1f;
+    private float slerpDuration = 0.4f;
+    private float slerpSharpness = 3;
 
     //smoothing vars
     private float smoothTime = 0.1f;
@@ -42,7 +43,9 @@ public class PlaceObject : MonoBehaviour
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        if (!item_Caroussel.IsScrolling() && !item_Caroussel.PreviouslyScrolling() && EventSystem.current.currentSelectedGameObject == null)
+        if (levelStatus.isRotating) return;
+
+        if (!item_Caroussel.isScrolling && !item_Caroussel.previouslyScrolling && EventSystem.current.currentSelectedGameObject == null)
         {
             if (Input.touchCount > 0)
             {
@@ -81,11 +84,11 @@ public class PlaceObject : MonoBehaviour
 
     public void spawnObject()
     {
-        if (item_Caroussel.IsScrolling() || item_Caroussel.IsAnimating() || levelStatus.IsPlacing()) return;
+        if (item_Caroussel.isScrolling || item_Caroussel.isAnimating || levelStatus.isPlacing) return;
         
         gameObject.SetActive(true);
         item_Caroussel.DisappearThenSlide(transform);
-        transform.position = new Vector3(0, levelStatus.HighestY() + placementHeight, 0);
+        transform.position = new Vector3(0, levelStatus.highestY + placementHeight, 0);
         placingObject = true;
         rb.useGravity = false;
     }
@@ -103,6 +106,7 @@ public class PlaceObject : MonoBehaviour
 
     public void initiateRotation()
     {
+        levelStatus.isRotating = true;
         if (placingObject && slerpCoroutine == null)
         {
             Quaternion targetRotation = transform.rotation * Quaternion.AngleAxis(-90, Vector3.forward);
@@ -121,16 +125,23 @@ public class PlaceObject : MonoBehaviour
 
     IEnumerator rotate(Quaternion targetRotation)
     {
-        float slerpAmount = 0.0f;
-        while (slerpAmount < 1.0f)
+        float Tanh(float x) => (MathF.Exp(x) - MathF.Exp(-x)) / (MathF.Exp(x) + MathF.Exp(-x));
+        float Coth(float x) => (MathF.Exp(x) + MathF.Exp(-x)) / (MathF.Exp(x) - MathF.Exp(-x));
+        Func<float, float> slerpFunc = x => (float) (Coth(slerpSharpness / 2) * Tanh(slerpSharpness * (x - 0.5f)) / 2 + 0.5f);
+        Quaternion initialRotation = transform.rotation;
+        float timer = 0.0f;
+        float progress = 0.0f;
+        while (progress < 0.99f)
         {
-            slerpAmount += Time.deltaTime * slerpSpeed;
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, slerpAmount);
+            timer += Time.deltaTime;
+            progress = timer / slerpDuration;
+            transform.rotation = Quaternion.Slerp(initialRotation, targetRotation, slerpFunc(progress));
             yield return null;
         }
 
         transform.rotation = targetRotation;
         slerpCoroutine = null;
+        levelStatus.isRotating = false;
     }
 
     public bool PlacingObject()

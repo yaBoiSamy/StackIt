@@ -14,7 +14,8 @@ public class HightBar : MonoBehaviour
     private Trophy bronze, silver, gold;
     private Image foreground;
 
-    public Transform bronzeTrigger, silverTrigger, goldTrigger;
+    public Transform trophyTriggers;
+    private Transform bronzeTrigger, silverTrigger, goldTrigger;
 
     //lerp vars
     private const float lerpDuration = 0.5f;
@@ -24,6 +25,10 @@ public class HightBar : MonoBehaviour
     void Start()
     {
         levelStatus = Camera.main.GetComponent<LevelStatus>();
+
+        bronzeTrigger = trophyTriggers.Find("Bronze");
+        silverTrigger = trophyTriggers.Find("Silver");
+        goldTrigger   = trophyTriggers.Find("Gold");
 
         Transform trophies = transform.Find("Trophies");
         bronzeRT = (RectTransform)trophies.Find("Bronze");
@@ -55,10 +60,10 @@ public class HightBar : MonoBehaviour
     
     void Update()
     {
-        if (levelStatus.PreviouslyMoving() && !levelStatus.IsMoving() && levelStatus.HighestY() > alltimeHighestY)
+        if (levelStatus.previouslyMoving && !levelStatus.isMoving && levelStatus.highestY > alltimeHighestY)
         {
-            initiateLerp(1 - levelStatus.HighestY() / goldTrigger.position.y);
-            alltimeHighestY = levelStatus.HighestY();
+            initiateLerp(1 - levelStatus.highestY / goldTrigger.position.y);
+            alltimeHighestY = levelStatus.highestY;
         }
 
         if (!bronze.Earned() && (barHeight - foreground.fillAmount * barHeight) > bronzeBarRT.sizeDelta.y)

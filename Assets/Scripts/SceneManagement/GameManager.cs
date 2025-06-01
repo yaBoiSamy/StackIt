@@ -10,8 +10,7 @@ public class GameManager : MonoBehaviour
     public bool[] requiresLoadingScreen;
 
     public GameObject loadingScreen;
-    public LoadingAnimation loadingAnimation;
-    public Image loadingBar;
+    private LoadingAnimation loadingAnimation;
 
     public Image fadeImage;
     public float fadeTime;
@@ -65,27 +64,31 @@ public class GameManager : MonoBehaviour
         }
 
         AsyncOperation loadOperation = SceneManager.LoadSceneAsync(sceneIndex, LoadSceneMode.Additive);
-        loadOperation.allowSceneActivation = true;
+        loadOperation.allowSceneActivation = false;
         currentScene = sceneIndex;
 
         float elapsedLoadTime = 0f;
 
-        while (!loadOperation.isDone)
+        while (loadOperation.progress < 0.9f)
         {
             elapsedLoadTime += Time.deltaTime;
+            float progress = Mathf.Clamp01(loadOperation.progress / 0.9f);
+            Debug.Log("Loading: " + (progress * 100f) + "%");
             yield return null;
         }
+        Debug.Log("Loading: 90% complete, waiting for activation.");
 
         yield return null;
-        Debug.Log(currentScene);
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(currentScene));
-        DynamicGI.UpdateEnvironment();
+        loadOperation.allowSceneActivation = true;
 
-        while (elapsedLoadTime <= minLoadTime)
+        while (elapsedLoadTime <= minLoadTime || !loadOperation.isDone)
         {
             elapsedLoadTime += Time.deltaTime;
             yield return null;
         }
+
+        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(currentScene));
+        DynamicGI.UpdateEnvironment();
 
         if (withLoad)
         {
