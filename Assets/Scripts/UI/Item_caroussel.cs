@@ -48,8 +48,9 @@ public class Item_caroussel : MonoBehaviour
 
     void Start()
     {
-        buttonScale = carrousselButtonPrefab.GetComponent<RectTransform>().localScale.x;
-        buttonSize = carrousselButtonPrefab.GetComponent<RectTransform>().sizeDelta.x * buttonScale;
+        RectTransform carrouselButtonRT = carrousselButtonPrefab.GetComponent<RectTransform>();
+        buttonScale = carrouselButtonRT.localScale.x;
+        buttonSize = carrouselButtonRT.sizeDelta.x * buttonScale;
 
         carrousselRT = GetComponent<RectTransform>();
         carrousselRT.anchoredPosition = new Vector2(boundPadding, carrousselRT.anchoredPosition.y);
@@ -80,8 +81,10 @@ public class Item_caroussel : MonoBehaviour
             carrouselButtons[i].localScale = buttonScale * Vector2.one;
         }
 
-        GetComponent<BoxCollider>().size = new Vector3(carrouselWidth + 2 * boundPadding, carrousselRT.sizeDelta.y, 1);
-        GetComponent<BoxCollider>().center = new Vector3(carrouselWidth / 2 - boundPadding, 0, 0);
+        float carrouselWidthScaleNormalized = carrouselWidth / transform.localScale.x;
+
+        GetComponent<BoxCollider>().size = new Vector3(carrouselWidthScaleNormalized + 2 * boundPadding, carrousselRT.sizeDelta.y, 1);
+        GetComponent<BoxCollider>().center = new Vector3(carrouselWidthScaleNormalized / 2, 0, 0);
 
     }
 

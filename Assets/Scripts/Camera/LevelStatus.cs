@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,6 +9,8 @@ public class LevelStatus : MonoBehaviour
     public Transform itemCarrousel;
     public Transform heightBar;
     public Transform inactivePos;
+    private float zoomScaling = 0.006f;
+    private float zoomAdjustment = -0.49f;
 
     [HideInInspector] public int itemCount;
     [HideInInspector] public Transform[] items;
@@ -47,6 +48,10 @@ public class LevelStatus : MonoBehaviour
         }
         meshes = meshList.ToArray();
 
+        float dpi = Screen.dpi;
+        if (dpi == 96 || dpi == 0f) dpi = 458f; // fallback if DPI is unknown
+        float widthMM = Camera.main.pixelWidth / dpi * 25.4f;
+        transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + zoomScaling * widthMM + zoomAdjustment);
         cameraOffset = transform.position;
     }
 
