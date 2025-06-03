@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -69,6 +70,27 @@ public class GameManager : MonoBehaviour
 
         float elapsedLoadTime = 0f;
 
+        Scene loadedScene = SceneManager.GetSceneByBuildIndex(currentScene);
+        void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene != loadedScene) return;
+            foreach (GameObject root in loadedScene.GetRootGameObjects())
+            {
+                EventSystem evt = root.GetComponent<EventSystem>();
+                if (evt != null)
+                {
+                    evt.enabled = false;
+
+                    var standaloneModule = evt.GetComponent<StandaloneInputModule>();
+                    if (standaloneModule != null)
+                        standaloneModule.enabled = false;
+                    Debug.Log($"Disabled EventSystem in scene: {currentScene}");
+                }
+            }
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
         while (loadOperation.progress < 0.9f)
         {
             elapsedLoadTime += Time.deltaTime;
@@ -76,18 +98,21 @@ public class GameManager : MonoBehaviour
             Debug.Log("Loading: " + (progress * 100f) + "%");
             yield return null;
         }
-        Debug.Log("Loading: 90% complete, waiting for activation.");
 
         yield return null;
-        loadOperation.allowSceneActivation = true;
 
-        while (elapsedLoadTime <= minLoadTime || !loadOperation.isDone)
+        while (elapsedLoadTime <= minLoadTime)
         {
             elapsedLoadTime += Time.deltaTime;
             yield return null;
         }
+            
+        loadOperation.allowSceneActivation = true;
 
-        SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(currentScene));
+        while (!loadOperation.isDone)
+            yield return null;
+
+        SceneManager.SetActiveScene(loadedScene);
         DynamicGI.UpdateEnvironment();
 
         if (withLoad)
