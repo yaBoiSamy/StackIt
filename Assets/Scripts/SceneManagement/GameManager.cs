@@ -69,7 +69,6 @@ public class GameManager : MonoBehaviour
         currentScene = sceneIndex;
 
         float elapsedLoadTime = 0f;
-
         Scene loadedScene = SceneManager.GetSceneByBuildIndex(currentScene);
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {

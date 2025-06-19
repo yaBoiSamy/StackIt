@@ -70,7 +70,10 @@ public class Item_caroussel : MonoBehaviour
         carrouselButtons = new RectTransform[levelStatus.itemCount];
 
         parentCanvasWidth = GetComponentInParent<Canvas>().GetComponent<RectTransform>().rect.width;
-        carrouselWidth = buttonSize * levelStatus.itemCount * transform.localScale.x;
+        float carrouselWidthScaleNormalized = buttonSize * levelStatus.itemCount;
+        GetComponent<BoxCollider>().size = new Vector3(carrouselWidthScaleNormalized + 2 * boundPadding, carrousselRT.sizeDelta.y, 1);
+        GetComponent<BoxCollider>().center = new Vector3(carrouselWidthScaleNormalized / 2, 0, 0);
+        carrouselWidth = carrouselWidthScaleNormalized * transform.localScale.x;
 
         for (int i = 0; i < levelStatus.itemCount; i++)
         {
@@ -81,10 +84,7 @@ public class Item_caroussel : MonoBehaviour
             carrouselButtons[i].localScale = buttonScale * Vector2.one;
         }
 
-        float carrouselWidthScaleNormalized = carrouselWidth / transform.localScale.x;
 
-        GetComponent<BoxCollider>().size = new Vector3(carrouselWidthScaleNormalized + 2 * boundPadding, carrousselRT.sizeDelta.y, 1);
-        GetComponent<BoxCollider>().center = new Vector3(carrouselWidthScaleNormalized / 2, 0, 0);
 
     }
 
@@ -98,7 +98,6 @@ public class Item_caroussel : MonoBehaviour
             isScrolling = false;
 
         if (isScrolling) return;
-
         if (carrousselRT.anchoredPosition.x + Mathf.Max(carrouselWidth, parentCanvasWidth - 2 * boundPadding) < parentCanvasWidth - boundPadding)
         {
             Vector2 objective = new Vector3(parentCanvasWidth - boundPadding - Mathf.Max(carrouselWidth, parentCanvasWidth - 2 * boundPadding), carrousselRT.anchoredPosition.y);
@@ -123,8 +122,7 @@ public class Item_caroussel : MonoBehaviour
 
         GameObject hitObject = hitInfo.collider.gameObject;
         Vector2 currentPosition = ray.GetPoint(10f);
-        if (!hitObject.CompareTag("Carrousel")) return;
-
+        if (hitObject.name != "Item carrousel") return;
         if (Input.GetMouseButtonDown(0) || (touchExists && Input.GetTouch(0).phase == TouchPhase.Began))
         {
             scrollStartPosition = currentPosition;

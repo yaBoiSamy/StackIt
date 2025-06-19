@@ -8,16 +8,16 @@ public class LevelMap : MonoBehaviour
     private bool isSlidingLevels;
     public float smoothTime;
     private Vector3 smoothDampProgress;
-    private int screenResX;
+    private float screenResX;
     public int worldCount;
-    private int[] anchors;
+    private float[] anchors;
     private float clickOffset;
     private int observedWorld = 0;
 
     private void Start()
     {
-        screenResX = Screen.width;
-        anchors = new int[worldCount];
+        screenResX = Screen.width * GetComponentInParent<Canvas>().scaleFactor;
+        anchors = new float[worldCount];
 
         for (int i = 0; i < anchors.Length; i++)
         {
